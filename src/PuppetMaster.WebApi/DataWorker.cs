@@ -87,7 +87,8 @@ namespace PuppetMaster.WebApi
                 await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Icebox", Name = "Port", GameId = game.Id });
                 await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Breeze", Name = "Foxtrot", GameId = game.Id });
                 await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Fracture", Name = "Canyon", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Pearl", Name = "Pitt", GameId = game.Id });             
+                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Pearl", Name = "Pitt", GameId = game.Id });
+                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Lotus", Name = "Jam", GameId = game.Id });
             }
         }
     }
