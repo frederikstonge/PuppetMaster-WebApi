@@ -38,10 +38,9 @@ namespace PuppetMaster.WebApi.Services
                 .ToListAsync();
         }
 
-        public async Task<Room> GetRoomAsync(Guid id)
+        public Task<Room> GetRoomAsync(Guid id)
         {
-            var room = await GetRoomByIdAsync(id);
-            return room;
+            return GetRoomByIdAsync(id);
         }
 
         public async Task<Room> CreateRoomAsync(Guid userId, CreateRoomRequest request)
@@ -129,7 +128,7 @@ namespace PuppetMaster.WebApi.Services
 
             await _applicationDbContext.AddAsync(roomUser);
             await _applicationDbContext.SaveChangesAsync();
-            await RoomChangedAsync(room.Id);
+            await _hubService.OnRoomChangedAsync(room);
             return room;
         }
 
@@ -155,7 +154,7 @@ namespace PuppetMaster.WebApi.Services
                 return null;
             }
 
-            await RoomChangedAsync(room.Id);
+            await _hubService.OnRoomChangedAsync(room);
             return room;
         }
 
@@ -178,7 +177,7 @@ namespace PuppetMaster.WebApi.Services
             roomUser.IsReady = isReady;
             _applicationDbContext.Update(roomUser);
             await _applicationDbContext.SaveChangesAsync();
-            await RoomChangedAsync(room.Id);
+            await _hubService.OnRoomChangedAsync(room);
             return room;
         }
 
@@ -235,12 +234,6 @@ namespace PuppetMaster.WebApi.Services
             }
 
             return gameUser;
-        }
-
-        private async Task RoomChangedAsync(Guid roomId)
-        {
-            var room = await GetRoomByIdAsync(roomId);
-            await _hubService.OnRoomChangedAsync(room);
         }
     }
 }

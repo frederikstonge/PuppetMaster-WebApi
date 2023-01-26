@@ -65,30 +65,48 @@ namespace PuppetMaster.WebApi
             }
         }
 
-        private static async Task CreateGamesAsync(IServiceScope scope)
+        private static async Task<Models.Database.Game> CreateGamesAsync(IServiceScope scope)
         {
             var gameService = scope.ServiceProvider.GetRequiredService<IGamesService>();
-            var mapService = scope.ServiceProvider.GetRequiredService<IMapsService>();
             var games = await gameService.GetGamesAsync();
-            if (!games.Any(g => g.Name == "Valorant"))
+            var game = games.FirstOrDefault(g => g.Name == "Valorant");
+            if (game == null)
             {
-                var game = await gameService.CreateGameAdminAsync(new Models.Requests.CreateGameAdminRequest()
+                game = await gameService.CreateGameAdminAsync(new Models.Requests.CreateGameAdminRequest()
                 {
                     Name = "Valorant",
                     IconUrl = "/images/valorant.jpg",
                     PlayerCount = 10,
                     TeamCount = 2
                 });
+            }
 
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Ascent", Name = "Ascent", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Bind", Name = "Duality", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Split", Name = "Bonsai", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Haven", Name = "Triad", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Icebox", Name = "Port", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Breeze", Name = "Foxtrot", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Fracture", Name = "Canyon", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Pearl", Name = "Pitt", GameId = game.Id });
-                await mapService.CreateGameMapAdminAsync(new Models.Requests.CreateMapRequest() { DisplayName = "Lotus", Name = "Jam", GameId = game.Id });
+            await CreateMapForGame(scope, game, "Ascent", "Ascent");
+            await CreateMapForGame(scope, game, "Duality", "Bind");
+            await CreateMapForGame(scope, game, "Bonsai", "Split");
+            await CreateMapForGame(scope, game, "Triad", "Haven");
+            await CreateMapForGame(scope, game, "Port", "Icebox");
+            await CreateMapForGame(scope, game, "Foxtrot", "Breeze");
+            await CreateMapForGame(scope, game, "Canyon", "Fracture");
+            await CreateMapForGame(scope, game, "Pitt", "Pearl");
+            await CreateMapForGame(scope, game, "Jam", "Lotus");
+
+            return game;
+        }
+
+        private static async Task CreateMapForGame(IServiceScope scope, Models.Database.Game game, string name, string displayName)
+        {
+            var mapService = scope.ServiceProvider.GetRequiredService<IMapsService>();
+            var maps = await mapService.GetMapsAsync(game.Id);
+            if (!maps.Any(m => m.Name == name && m.DisplayName == displayName))
+            {
+                await mapService.CreateGameMapAdminAsync(
+                    new Models.Requests.CreateMapRequest() 
+                    { 
+                        DisplayName = displayName, 
+                        Name = name,
+                        GameId = game.Id 
+                    });
             }
         }
     }

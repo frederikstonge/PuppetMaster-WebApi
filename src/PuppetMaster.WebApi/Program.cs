@@ -123,7 +123,7 @@ namespace PuppetMaster.WebApi
             builder.Services.AddScoped<IRoomsService, RoomsService>();
             builder.Services.AddScoped<IMatchesService, MatchesService>();
             builder.Services.AddScoped<IHubService, HubService>();
-            builder.Services.AddScoped<IDelayedTasksService, DelayedTasksService>();
+            builder.Services.AddSingleton<IDelayedTasksService, DelayedTasksService>();
             builder.Services.AddSingleton<IUserIdProvider, UserIdProvider>();
 
             // Add default data in the database

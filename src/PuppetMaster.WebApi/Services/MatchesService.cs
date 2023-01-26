@@ -92,8 +92,6 @@ namespace PuppetMaster.WebApi.Services
             var match = await GetMatchByIdAsync(id);
             var room = await GetRoomByIdAsync(match!.RoomId!.Value);
 
-            _delayedTasksService.CancelTask(match.RoomId!.Value);
-
             if (!room!.RoomUsers!.Any(ru => ru.ApplicationUserId == pickedUserId))
             {
                 throw new HttpResponseException(HttpStatusCode.Conflict);
@@ -109,6 +107,8 @@ namespace PuppetMaster.WebApi.Services
             {
                 throw new HttpResponseException(HttpStatusCode.Conflict);
             }
+
+            _delayedTasksService.CancelTask(match.RoomId!.Value);
 
             var teamMember = new MatchTeamUser()
             {
@@ -165,13 +165,15 @@ namespace PuppetMaster.WebApi.Services
                 throw new HttpResponseException(HttpStatusCode.Conflict);
             }
 
+            _delayedTasksService.CancelTask(match.RoomId!.Value);
+
             matchTeamUser.MapVote = voteMap;
+
             _applicationDbContext.Update(matchTeamUser);
             await _applicationDbContext.SaveChangesAsync();
 
             if (match.MatchTeams!.SelectMany(mt => mt.MatchTeamUsers!).Select(mtu => mtu.MapVote).All(m => !string.IsNullOrEmpty(m)))
             {
-                _delayedTasksService.CancelTask(match.RoomId!.Value);
                 await _hubService.OnCreateLobbyAsync(match);
             }
 

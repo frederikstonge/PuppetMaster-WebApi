@@ -58,7 +58,7 @@ namespace PuppetMaster.WebApi.Services
                     {
                         tokenSource.Dispose();
                     }
-                });
+                }, tokenSource.Token);
         }
 
         public void SchedulePlayerPick(Guid userId, Guid matchId, Room room, TimeSpan delay)
@@ -102,7 +102,7 @@ namespace PuppetMaster.WebApi.Services
                     {
                         tokenSource.Dispose();
                     }
-                });
+                }, tokenSource.Token);
         }
     }
 }

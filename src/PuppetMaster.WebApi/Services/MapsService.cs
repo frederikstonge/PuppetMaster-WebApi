@@ -15,6 +15,22 @@ namespace PuppetMaster.WebApi.Services
             _applicationDbContext = applicationDbContext;
         }
 
+        public async Task<List<Map>> GetMapsAsync(Guid gameId)
+        {
+            var game = await _applicationDbContext.Games!.FirstOrDefaultAsync(g => g.Id == gameId);
+            if (game == null)
+            {
+                throw new HttpResponseException(HttpStatusCode.NotFound);
+            }
+
+            return await _applicationDbContext.Maps!.Where(m => m.GameId == gameId).ToListAsync();
+        }
+
+        public Task<Map?> GetMapAsync(Guid id)
+        {
+            return _applicationDbContext.Maps!.FirstOrDefaultAsync(m => m.Id == id);
+        }
+
         public async Task<Map> CreateGameMapAdminAsync(CreateMapRequest request)
         {
             var game = await _applicationDbContext.Games!.FirstOrDefaultAsync(g => g.Id == request.GameId);

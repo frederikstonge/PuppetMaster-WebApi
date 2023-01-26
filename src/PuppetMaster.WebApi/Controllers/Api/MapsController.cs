@@ -21,6 +21,22 @@ namespace PuppetMaster.WebApi.Controllers.Api
             _mapper = mapper;
         }
 
+        [HttpGet("")]
+        [CustomAuthorize]
+        public async Task<List<MapResponse>> GetMaps(Guid gameId)
+        {
+            var maps = await _mapsService.GetMapsAsync(gameId);
+            return maps.Select(m => _mapper.Map<MapResponse>(m)).ToList();
+        }
+
+        [HttpGet("{id}")]
+        [CustomAuthorize]
+        public async Task<MapResponse> GetMap(Guid id)
+        {
+            var map = await _mapsService.GetMapAsync(id);
+            return _mapper.Map<MapResponse>(map);
+        }
+
         [HttpPost("admin")]
         [CustomAuthorize(Roles = Role.Administrator)]
         public async Task<MapResponse> CreateGameMapAdmin(CreateMapRequest request)

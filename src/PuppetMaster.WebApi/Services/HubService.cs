@@ -28,7 +28,7 @@ namespace PuppetMaster.WebApi.Services
             return _roomHubContext.Clients.Group(groupId).SendAsync(SignalRMethods.RoomChanged, roomResponse);
         }
 
-        public async Task OnMatchChangedAsync(Match match, Room room)
+        public Task OnMatchChangedAsync(Match match, Room room)
         {
             var groupId = match.Room!.Id!.ToString();
             var matchResponse = _mapper.Map<MatchResponse>(match);
@@ -63,8 +63,6 @@ namespace PuppetMaster.WebApi.Services
                     .ApplicationUserId;
             }
 
-            await _roomHubContext.Clients.Group(groupId).SendAsync(SignalRMethods.MatchChanged, roomMatchResponse);
-
             if (roomMatchResponse.AvailablePlayers.Any())
             {
                 _delayedTasksService.SchedulePlayerPick(roomMatchResponse.CaptainToPickThisTurn!.Value, matchResponse.Id, room, delay);
@@ -73,6 +71,8 @@ namespace PuppetMaster.WebApi.Services
             {
                 _delayedTasksService.ScheduleCreateLobby(matchResponse.Id, room, delay);
             }
+
+            return _roomHubContext.Clients.Group(groupId).SendAsync(SignalRMethods.MatchChanged, roomMatchResponse);
         }
 
         public Task OnCreateLobbyAsync(Match match)

@@ -15,6 +15,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PuppetMaster.WebApi", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PuppetMaster.WebApi.Certificates", "src\Puppetmaster.WebApi.Certificates\PuppetMaster.WebApi.Certificates.csproj", "{4BD095AB-6C04-42D1-871F-5644A3408BDE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetMaster.WebApi.Tests", "tests\PuppetMaster.WebApi.Tests\PuppetMaster.WebApi.Tests.csproj", "{29843516-EF75-4BDA-A6F7-4ED36AA6B976}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -29,6 +31,10 @@ Global
 		{4BD095AB-6C04-42D1-871F-5644A3408BDE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4BD095AB-6C04-42D1-871F-5644A3408BDE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{4BD095AB-6C04-42D1-871F-5644A3408BDE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{29843516-EF75-4BDA-A6F7-4ED36AA6B976}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{29843516-EF75-4BDA-A6F7-4ED36AA6B976}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{29843516-EF75-4BDA-A6F7-4ED36AA6B976}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{29843516-EF75-4BDA-A6F7-4ED36AA6B976}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
