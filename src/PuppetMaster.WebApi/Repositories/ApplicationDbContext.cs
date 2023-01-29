@@ -51,7 +51,7 @@ namespace PuppetMaster.WebApi.Repositories
                .OnDelete(DeleteBehavior.Cascade);
 
             builder.Entity<ApplicationUser>()
-               .HasOne(gu => gu.RoomUser)
+               .HasOne(au => au.RoomUser)
                .WithOne(ru => ru.ApplicationUser)
                .HasForeignKey<RoomUser>(ru => ru.ApplicationUserId)
                .OnDelete(DeleteBehavior.Cascade);
@@ -132,6 +132,12 @@ namespace PuppetMaster.WebApi.Repositories
                .WithOne(mt => mt.Match)
                .HasForeignKey(mt => mt.MatchId)
                .OnDelete(DeleteBehavior.Cascade);
+
+            builder.Entity<Match>()
+               .HasMany(m => m.Users)
+               .WithOne(au => au.Match)
+               .HasForeignKey(au => au.MatchId)
+               .OnDelete(DeleteBehavior.NoAction);
 
             builder.Entity<Match>()
                .HasOne(m => m.Room)

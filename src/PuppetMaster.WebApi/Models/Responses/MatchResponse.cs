@@ -14,6 +14,8 @@
 
         public string Region { get; set; } = string.Empty;
 
+        public List<UserResponse>? Users { get; set; }
+
         public List<MatchTeamResponse>? MatchTeams { get; set; }
 
         public Guid GameId { get; set; }

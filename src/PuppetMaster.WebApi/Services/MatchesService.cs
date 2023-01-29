@@ -42,7 +42,8 @@ namespace PuppetMaster.WebApi.Services
             {
                 Room = room,
                 GameId = room.GameId,
-                Region = room.Region
+                Region = room.Region,
+                Users = room.RoomUsers!.Select(ru => ru.ApplicationUser!).ToList()
             };
 
             await _applicationDbContext.AddAsync(match);
@@ -83,16 +84,15 @@ namespace PuppetMaster.WebApi.Services
                 await _applicationDbContext.SaveChangesAsync();
             }
 
-            await _hubService.OnMatchChangedAsync(match, room);
+            await _hubService.OnMatchChangedAsync(match);
             return match;
         }
 
         public async Task<Match> PickPlayerAsync(Guid userId, Guid id, Guid pickedUserId)
         {
             var match = await GetMatchByIdAsync(id);
-            var room = await GetRoomByIdAsync(match!.RoomId!.Value);
 
-            if (!room!.RoomUsers!.Any(ru => ru.ApplicationUserId == pickedUserId))
+            if (!match!.Users!.Any(au => au.Id == pickedUserId))
             {
                 throw new HttpResponseException(HttpStatusCode.Conflict);
             }
@@ -119,7 +119,7 @@ namespace PuppetMaster.WebApi.Services
             await _applicationDbContext.AddAsync(teamMember);
             await _applicationDbContext.SaveChangesAsync();
 
-            await _hubService.OnMatchChangedAsync(match, room);
+            await _hubService.OnMatchChangedAsync(match);
 
             return match;
         }
@@ -145,11 +145,9 @@ namespace PuppetMaster.WebApi.Services
             _applicationDbContext.Update(match);
             await _applicationDbContext.SaveChangesAsync();
 
-            matchTeamUser.HasJoined = true;
-            _applicationDbContext.Update(matchTeamUser);
-            await _applicationDbContext.SaveChangesAsync();
-
             await _hubService.OnJoinLobbyAsync(match);
+
+            await HasJoinedAsync(userId, id);
             return match;
         }
 
@@ -246,6 +244,7 @@ namespace PuppetMaster.WebApi.Services
         {
             var match = await _applicationDbContext.Matches!
                     .Where(m => m.Id == id)
+                    .Include(m => m.Users)
                     .Include(m => m.Game!)
                     .ThenInclude(g => g.Maps!)
                     .Include(m => m.MatchTeams!)

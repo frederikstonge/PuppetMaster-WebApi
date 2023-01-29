@@ -8,6 +8,8 @@
 
         public Game? Game { get; set; }
 
+        public ICollection<ApplicationUser>? Users { get; set; }
+
         public ICollection<MatchTeam>? MatchTeams { get; set; }
 
         public Room? Room { get; set; }

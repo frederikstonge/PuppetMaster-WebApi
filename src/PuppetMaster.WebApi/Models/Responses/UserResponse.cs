@@ -17,5 +17,7 @@
         public Guid? RoomUserId { get; set; }
 
         public Guid? RoomId { get; set; }
+
+        public Guid? MatchId { get; set; }
     }
 }

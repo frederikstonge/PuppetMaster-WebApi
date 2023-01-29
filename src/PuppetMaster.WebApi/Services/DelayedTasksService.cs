@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using PuppetMaster.WebApi.Models.Database;
 
 namespace PuppetMaster.WebApi.Services
 {
@@ -21,15 +20,15 @@ namespace PuppetMaster.WebApi.Services
             }
         }
 
-        public void ScheduleCreateLobby(Guid matchId, Room room, TimeSpan delay)
+        public void ScheduleCreateLobby(Guid matchId, Guid roomId, TimeSpan delay)
         {
-            if (TaskTokens.ContainsKey(room.Id))
+            if (TaskTokens.ContainsKey(roomId))
             {
                 return;
             }
 
             var tokenSource = new CancellationTokenSource();
-            TaskTokens.TryAdd(room.Id, tokenSource);
+            TaskTokens.TryAdd(roomId, tokenSource);
 
             Task.Run(
                 async () =>
@@ -52,7 +51,7 @@ namespace PuppetMaster.WebApi.Services
                         }
 
                         await hubService.OnCreateLobbyAsync(match);
-                        TaskTokens.Remove(room.Id, out var _);
+                        TaskTokens.Remove(roomId, out var _);
                     }
                     finally
                     {
@@ -61,15 +60,15 @@ namespace PuppetMaster.WebApi.Services
                 }, tokenSource.Token);
         }
 
-        public void SchedulePlayerPick(Guid userId, Guid matchId, Room room, TimeSpan delay)
+        public void SchedulePlayerPick(Guid userId, Guid matchId, Guid roomId, TimeSpan delay)
         {
-            if (TaskTokens.ContainsKey(room.Id))
+            if (TaskTokens.ContainsKey(roomId))
             {
                 return;
             }
 
             var tokenSource = new CancellationTokenSource();
-            TaskTokens.TryAdd(room.Id, tokenSource);
+            TaskTokens.TryAdd(roomId, tokenSource);
 
             Task.Run(
                 async () =>
@@ -86,7 +85,7 @@ namespace PuppetMaster.WebApi.Services
                         var matchesService = scope.ServiceProvider.GetRequiredService<IMatchesService>();
                         var match = await matchesService.GetMatchAsync(matchId);
                         var pickedPlayers = match.MatchTeams!.SelectMany(mt => mt.MatchTeamUsers!.Select(mtu => mtu.ApplicationUserId));
-                        var availablePlayers = room.RoomUsers!.Select(ru => ru.ApplicationUser!).ExceptBy(pickedPlayers, u => u!.Id).ToList();
+                        var availablePlayers = match.Users!.ExceptBy(pickedPlayers, u => u!.Id).ToList();
                         var random = new Random();
                         var pickIndex = random.Next(availablePlayers.Count - 1);
                         var pickPlayer = availablePlayers.ElementAt(pickIndex);
@@ -96,7 +95,7 @@ namespace PuppetMaster.WebApi.Services
                         }
 
                         await matchesService.PickPlayerAsync(userId, matchId, pickPlayer.Id);
-                        TaskTokens.Remove(room.Id, out var _);
+                        TaskTokens.Remove(roomId, out var _);
                     }
                     finally
                     {

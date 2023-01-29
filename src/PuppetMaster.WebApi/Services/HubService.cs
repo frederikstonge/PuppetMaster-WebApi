@@ -28,11 +28,10 @@ namespace PuppetMaster.WebApi.Services
             return _roomHubContext.Clients.Group(groupId).SendAsync(SignalRMethods.RoomChanged, roomResponse);
         }
 
-        public Task OnMatchChangedAsync(Match match, Room room)
+        public Task OnMatchChangedAsync(Match match)
         {
-            var groupId = match.Room!.Id!.ToString();
+            var groupId = match.RoomId!.Value.ToString();
             var matchResponse = _mapper.Map<MatchResponse>(match);
-            var roomResponse = _mapper.Map<RoomResponse>(room);
 
             var delay = TimeSpan.FromSeconds(15);
 
@@ -46,8 +45,7 @@ namespace PuppetMaster.WebApi.Services
                 .SelectMany(mt => mt.MatchTeamUsers!
                 .Select(mtu => mtu.ApplicationUserId));
 
-            roomMatchResponse.AvailablePlayers = roomResponse.RoomUsers!
-                .Select(ru => ru.ApplicationUser!)
+            roomMatchResponse.AvailablePlayers = matchResponse.Users!
                 .ExceptBy(pickedPlayers, u => u!.Id)
                 .ToList();
 
@@ -65,11 +63,11 @@ namespace PuppetMaster.WebApi.Services
 
             if (roomMatchResponse.AvailablePlayers.Any())
             {
-                _delayedTasksService.SchedulePlayerPick(roomMatchResponse.CaptainToPickThisTurn!.Value, matchResponse.Id, room, delay);
+                _delayedTasksService.SchedulePlayerPick(roomMatchResponse.CaptainToPickThisTurn!.Value, matchResponse.Id, matchResponse.RoomId!.Value, delay);
             }
             else
             {
-                _delayedTasksService.ScheduleCreateLobby(matchResponse.Id, room, delay);
+                _delayedTasksService.ScheduleCreateLobby(matchResponse.Id, matchResponse.RoomId!.Value, delay);
             }
 
             return _roomHubContext.Clients.Group(groupId).SendAsync(SignalRMethods.MatchChanged, roomMatchResponse);

@@ -6,8 +6,8 @@ namespace PuppetMaster.WebApi.Services
     {
         void CancelTask(Guid roomId);
 
-        void ScheduleCreateLobby(Guid matchId, Room room, TimeSpan delay);
+        void ScheduleCreateLobby(Guid matchId, Guid roomId, TimeSpan delay);
 
-        void SchedulePlayerPick(Guid userId, Guid matchId, Room room, TimeSpan delay);
+        void SchedulePlayerPick(Guid userId, Guid matchId, Guid roomId, TimeSpan delay);
     }
 }

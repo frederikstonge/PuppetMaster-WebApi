@@ -10,10 +10,12 @@ namespace PuppetMaster.WebApi.Hubs
     public class RoomHub : Hub
     {
         private readonly IAccountService _accountService;
+        private readonly IRoomsService _roomsService;
 
-        public RoomHub(IAccountService accountService)
+        public RoomHub(IAccountService accountService, IRoomsService roomsService)
         {
             _accountService = accountService;
+            _roomsService = roomsService;
         }
 
         public override async Task OnConnectedAsync()
@@ -37,13 +39,22 @@ namespace PuppetMaster.WebApi.Hubs
             var user = await _accountService.GetUserAsync(Context.User!);
             var roomId = user!.RoomUser!.RoomId;
             var groupId = roomId!.ToString();
-            await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);
             var message = new ChatMessage()
             {
                 From = "Console",
                 Message = $"{user.UserName} has left the room."
             };
 
+            try
+            {
+                await _roomsService.LeaveRoomAsync(user.Id, roomId);
+            }
+            catch
+            {
+                // Already left
+            }
+
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, groupId);
             await SendChatMessage(groupId, message);
             await base.OnDisconnectedAsync(exception);
         }

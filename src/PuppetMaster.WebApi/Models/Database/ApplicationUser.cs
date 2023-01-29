@@ -15,5 +15,9 @@ namespace PuppetMaster.WebApi.Models.Database
         public RoomUser? RoomUser { get; set; }
 
         public ICollection<MatchTeamUser>? MatchTeamUsers { get; set; }
+
+        public Guid? MatchId { get; set; }
+
+        public Match? Match { get; set; }
     }
 }

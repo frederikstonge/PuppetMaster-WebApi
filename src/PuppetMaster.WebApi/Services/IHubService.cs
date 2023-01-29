@@ -6,7 +6,7 @@ namespace PuppetMaster.WebApi.Services
     {
         Task OnRoomChangedAsync(Room room);
 
-        Task OnMatchChangedAsync(Match match, Room room);
+        Task OnMatchChangedAsync(Match match);
 
         Task OnCreateLobbyAsync(Match match);
 

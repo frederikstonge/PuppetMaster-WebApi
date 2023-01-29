@@ -17,7 +17,7 @@ namespace PuppetMaster.WebApi.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "6.0.6")
+                .HasAnnotation("ProductVersion", "6.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
@@ -391,6 +391,9 @@ namespace PuppetMaster.WebApi.Migrations
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
 
+                    b.Property<Guid?>("MatchId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
@@ -419,6 +422,8 @@ namespace PuppetMaster.WebApi.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MatchId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -814,6 +819,16 @@ namespace PuppetMaster.WebApi.Migrations
                     b.Navigation("Authorization");
                 });
 
+            modelBuilder.Entity("PuppetMaster.WebApi.Models.Database.ApplicationUser", b =>
+                {
+                    b.HasOne("PuppetMaster.WebApi.Models.Database.Match", "Match")
+                        .WithMany("Users")
+                        .HasForeignKey("MatchId")
+                        .OnDelete(DeleteBehavior.NoAction);
+
+                    b.Navigation("Match");
+                });
+
             modelBuilder.Entity("PuppetMaster.WebApi.Models.Database.GameUser", b =>
                 {
                     b.HasOne("PuppetMaster.WebApi.Models.Database.ApplicationUser", "ApplicationUser")
@@ -957,6 +972,8 @@ namespace PuppetMaster.WebApi.Migrations
             modelBuilder.Entity("PuppetMaster.WebApi.Models.Database.Match", b =>
                 {
                     b.Navigation("MatchTeams");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("PuppetMaster.WebApi.Models.Database.MatchTeam", b =>
