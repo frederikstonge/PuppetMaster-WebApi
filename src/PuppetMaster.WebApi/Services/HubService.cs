@@ -1,4 +1,5 @@
-﻿using AutoMapper;
+﻿using System.Linq;
+using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
 using PuppetMaster.WebApi.Hubs;
 using PuppetMaster.WebApi.Models;
@@ -90,16 +91,18 @@ namespace PuppetMaster.WebApi.Services
 
         public Task OnSetupLobbyAsync(Match match)
         {
-            var map = match.MatchTeams!
-                .SelectMany(mt => mt.MatchTeamUsers!)
-                .GroupBy(m => m.MapVote)
-                .OrderByDescending(g => g.Count())
-                .First()
-                .Key!;
+            var maps = match.Game!.Maps!.ToList();
+
+            var map = maps
+                .OrderByDescending(m => match.MatchTeams!
+                    .SelectMany(mt => mt.MatchTeamUsers!)
+                    .Where(mtu => mtu.MapVote == m.Name)
+                    .Count())
+                .First();
 
             var message = new SetupLobbyMessage()
             {
-                Map = map,
+                Map = map.Name,
                 MatchId = match.Id
             };
 
