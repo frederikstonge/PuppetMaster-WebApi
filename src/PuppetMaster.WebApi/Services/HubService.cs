@@ -39,7 +39,7 @@ namespace PuppetMaster.WebApi.Services
 
             var delay = TimeSpan.FromSeconds(15);
 
-            var roomMatchResponse = new RoomMatchMessage()
+            var roomMatchMessage = new RoomMatchMessage()
             {
                 Delay = delay,
                 Match = matchResponse
@@ -49,32 +49,32 @@ namespace PuppetMaster.WebApi.Services
                 .SelectMany(mt => mt.MatchTeamUsers!
                 .Select(mtu => mtu.ApplicationUserId));
 
-            roomMatchResponse.AvailablePlayers = matchResponse.Users!
+            roomMatchMessage.AvailablePlayers = matchResponse.Users!
                 .ExceptBy(pickedPlayers, u => u!.Id)
                 .ToList();
 
-            if (roomMatchResponse.AvailablePlayers.Any())
+            if (roomMatchMessage.AvailablePlayers.Any())
             {
                 var teamTurn = matchResponse.MatchTeams!
                     .OrderBy(mt => mt.MatchTeamUsers!.Count)
                     .ThenBy(mt => mt.TeamIndex)
                     .First();
 
-                roomMatchResponse.CaptainToPickThisTurn = teamTurn.MatchTeamUsers!
+                roomMatchMessage.CaptainToPickThisTurn = teamTurn.MatchTeamUsers!
                     .Single(mtu => mtu.IsCaptain)
                     .ApplicationUserId;
             }
 
-            if (roomMatchResponse.AvailablePlayers.Any())
+            if (roomMatchMessage.AvailablePlayers.Any())
             {
-                _delayedTasksService.SchedulePlayerPick(roomMatchResponse.CaptainToPickThisTurn!.Value, matchResponse.Id, matchResponse.RoomId!.Value, delay);
+                _delayedTasksService.SchedulePlayerPick(roomMatchMessage.CaptainToPickThisTurn!.Value, matchResponse.Id, matchResponse.RoomId!.Value, delay);
             }
             else
             {
                 _delayedTasksService.ScheduleCreateLobby(matchResponse.Id, matchResponse.RoomId!.Value, delay);
             }
 
-            return _roomHubContext.Clients.Group(groupId).SendAsync(SignalRMethods.MatchChanged, roomMatchResponse);
+            return _roomHubContext.Clients.Group(groupId).SendAsync(SignalRMethods.MatchChanged, roomMatchMessage);
         }
 
         public Task OnCreateLobbyAsync(Match match)

@@ -11,7 +11,7 @@ namespace PuppetMaster.WebApi.Tests
 
         protected MockRepository MockRepository { get; }
 
-        public void Dispose()
+        public virtual void Dispose()
         {
             MockRepository.VerifyAll();
         }

@@ -6,10 +6,15 @@ namespace PuppetMaster.WebApi.Repositories
 {
     public class ApplicationDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, Guid>
     {
-        private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly IHttpContextAccessor? _httpContextAccessor;
+
+        public ApplicationDbContext(DbContextOptions options)
+            : base(options)
+        {
+        }
 
         public ApplicationDbContext(DbContextOptions options, IHttpContextAccessor httpContextAccessor)
-            : base(options)
+            : this(options)
         {
             _httpContextAccessor = httpContextAccessor;
         }
@@ -183,7 +188,7 @@ namespace PuppetMaster.WebApi.Repositories
 
         private void AddTimestamps()
         {
-            var httpContext = _httpContextAccessor.HttpContext;
+            var httpContext = _httpContextAccessor?.HttpContext;
             var userId = httpContext?.User.GetUserIdOrDefault();
             if (userId.HasValue)
             {
