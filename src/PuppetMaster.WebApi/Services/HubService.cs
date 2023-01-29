@@ -31,6 +31,9 @@ namespace PuppetMaster.WebApi.Services
 
         public Task OnMatchChangedAsync(Match match)
         {
+            // Cancel SchedulePlayerPick
+            _delayedTasksService.CancelTask(match.RoomId!.Value);
+
             var groupId = match.RoomId!.Value.ToString();
             var matchResponse = _mapper.Map<MatchResponse>(match);
 
@@ -76,6 +79,9 @@ namespace PuppetMaster.WebApi.Services
 
         public Task OnCreateLobbyAsync(Match match)
         {
+            // Cancel ScheduleCreateLobby
+            _delayedTasksService.CancelTask(match.RoomId!.Value);
+
             if (!string.IsNullOrEmpty(match.LobbyId))
             {
                 return Task.CompletedTask;
@@ -91,6 +97,9 @@ namespace PuppetMaster.WebApi.Services
 
         public Task OnSetupLobbyAsync(Match match)
         {
+            // Cancel HasJoinedTimeout
+            _delayedTasksService.CancelTask(match.RoomId!.Value);
+
             var maps = match.Game!.Maps!.ToList();
 
             var map = maps
@@ -111,6 +120,9 @@ namespace PuppetMaster.WebApi.Services
 
         public async Task OnJoinLobbyAsync(Match match)
         {
+            // Wait 30 seconds for others to join, otherwise cancel the match
+            _delayedTasksService.HasJoinedTimeout(match.Id, match.RoomId!.Value, TimeSpan.FromSeconds(30));
+
             foreach (var matchTeam in match.MatchTeams!.OrderBy(mt => mt.TeamIndex))
             {
                 var users = matchTeam.MatchTeamUsers!.Select(mtu => mtu.ApplicationUser!).Where(au => au.Id != match.LobbyLeaderId);

@@ -22,13 +22,5 @@ namespace PuppetMaster.WebApi.Tests.Services
 
             _service = new HubService(_mapperMock.Object, _hubContextMock.Object, _delayedTasksServiceMock.Object);
         }
-
-        //[Theory]
-        //[InlineData()]
-        //public async Task OnMatchChangedAsync()
-        //{
-        //    // Test OnMatchChangedAsync
-        //    await _service.OnMatchChangedAsync(match, room);
-        //}
     }
 }

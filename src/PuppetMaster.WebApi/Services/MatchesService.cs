@@ -10,13 +10,11 @@ namespace PuppetMaster.WebApi.Services
     {
         private readonly ApplicationDbContext _applicationDbContext;
         private readonly IHubService _hubService;
-        private readonly IDelayedTasksService _delayedTasksService;
 
-        public MatchesService(ApplicationDbContext applicationDbContext, IHubService hubService, IDelayedTasksService delayedTasksService)
+        public MatchesService(ApplicationDbContext applicationDbContext, IHubService hubService)
         {
             _applicationDbContext = applicationDbContext;
             _hubService = hubService;
-            _delayedTasksService = delayedTasksService;
         }
 
         public Task<Match> GetMatchAsync(Guid id)
@@ -50,10 +48,13 @@ namespace PuppetMaster.WebApi.Services
             await _applicationDbContext.SaveChangesAsync();
 
             Random random = new ();
+
+            // Get ids of all users in the room
             var roomUsers = room.RoomUsers!.Select(ru => ru.ApplicationUserId).ToList();
 
             for (int i = 1; i <= game.TeamCount; ++i)
             {
+                // Create team
                 var matchTeam = new MatchTeam()
                 {
                     MatchId = match.Id,
@@ -63,6 +64,7 @@ namespace PuppetMaster.WebApi.Services
                 await _applicationDbContext.AddAsync(matchTeam);
                 await _applicationDbContext.SaveChangesAsync();
 
+                // Select random index for team captain
                 var captainIndex = random.Next(roomUsers.Count - 1);
                 var captainId = roomUsers.ElementAt(captainIndex);
                 roomUsers.RemoveAt(captainIndex);
@@ -74,16 +76,19 @@ namespace PuppetMaster.WebApi.Services
                     ApplicationUserId = captainId
                 };
 
+                await _applicationDbContext.AddAsync(matchTeamCaptain);
+                await _applicationDbContext.SaveChangesAsync();
+
+                // If first team, captain is also lobby leader
                 if (i == 1)
                 {
                     match.LobbyLeaderId = captainId;
+                    _applicationDbContext.Update(match);
+                    await _applicationDbContext.SaveChangesAsync();
                 }
-
-                _applicationDbContext.Update(match);
-                await _applicationDbContext.AddAsync(matchTeamCaptain);
-                await _applicationDbContext.SaveChangesAsync();
             }
 
+            // Notify match has changed
             await _hubService.OnMatchChangedAsync(match);
             return match;
         }
@@ -92,33 +97,40 @@ namespace PuppetMaster.WebApi.Services
         {
             var match = await GetMatchByIdAsync(id);
 
+            // Picked user is in the match
             if (!match!.Users!.Any(au => au.Id == pickedUserId))
             {
                 throw new HttpResponseException(HttpStatusCode.Conflict);
             }
 
+            // Picked user is not already picked
             if (match.MatchTeams!.Any(mt => mt.MatchTeamUsers!.Any(mtu => mtu.ApplicationUserId == pickedUserId)))
             {
                 throw new HttpResponseException(HttpStatusCode.Conflict);
             }
 
-            var teamToSelect = match.MatchTeams!.OrderBy(mt => mt.MatchTeamUsers!.Count).ThenBy(mt => mt.TeamIndex).First();
+            // Team turn to pick
+            var teamToSelect = match.MatchTeams!
+                .OrderBy(mt => mt.MatchTeamUsers!.Count)
+                .ThenBy(mt => mt.TeamIndex)
+                .First();
+
+            // User is from team and is captain
             if (!teamToSelect.MatchTeamUsers!.Any(tmu => tmu.ApplicationUserId == userId && tmu.IsCaptain))
             {
                 throw new HttpResponseException(HttpStatusCode.Conflict);
             }
 
-            _delayedTasksService.CancelTask(match.RoomId!.Value);
-
             var teamMember = new MatchTeamUser()
             {
                 ApplicationUserId = pickedUserId,
-                MatchTeamId = teamToSelect.Id
+                MatchTeamId = teamToSelect.Id,
             };
 
             await _applicationDbContext.AddAsync(teamMember);
             await _applicationDbContext.SaveChangesAsync();
 
+            // Notify match has changed
             await _hubService.OnMatchChangedAsync(match);
 
             return match;
@@ -145,9 +157,12 @@ namespace PuppetMaster.WebApi.Services
             _applicationDbContext.Update(match);
             await _applicationDbContext.SaveChangesAsync();
 
+            // Notify other users to join
             await _hubService.OnJoinLobbyAsync(match);
 
+            // Set yourself as joined
             await HasJoinedAsync(userId, id);
+
             return match;
         }
 
@@ -163,13 +178,12 @@ namespace PuppetMaster.WebApi.Services
                 throw new HttpResponseException(HttpStatusCode.Conflict);
             }
 
-            _delayedTasksService.CancelTask(match.RoomId!.Value);
-
             matchTeamUser.MapVote = voteMap;
 
             _applicationDbContext.Update(matchTeamUser);
             await _applicationDbContext.SaveChangesAsync();
 
+            // All players have voted, create lobby.
             if (match.MatchTeams!.SelectMany(mt => mt.MatchTeamUsers!).Select(mtu => mtu.MapVote).All(m => !string.IsNullOrEmpty(m)))
             {
                 await _hubService.OnCreateLobbyAsync(match);
@@ -206,11 +220,6 @@ namespace PuppetMaster.WebApi.Services
         {
             var match = await GetMatchByIdAsync(id);
 
-            if (match.RoomId == null)
-            {
-                return match;
-            }
-
             var matchTeamUser = match.MatchTeams!
                 .SelectMany(mt => mt.MatchTeamUsers!)
                 .FirstOrDefault(mtu => mtu.ApplicationUserId == userId);
@@ -220,24 +229,14 @@ namespace PuppetMaster.WebApi.Services
                 throw new HttpResponseException(HttpStatusCode.Conflict);
             }
 
-            var roomId = match.RoomId.Value;
+            // Use request to save score and stats
+            return await EndMatchAsync(match);
+        }
 
-            match.RoomId = null;
-            _applicationDbContext.Update(match);
-
-            var room = await GetRoomByIdAsync(roomId);
-            foreach (var roomUser in room.RoomUsers!)
-            {
-                roomUser.IsReady = false;
-                _applicationDbContext.Update(roomUser);
-            }
-
-            await _applicationDbContext.SaveChangesAsync();
-
-            await _hubService.OnMatchEndedAsync(roomId);
-            await _hubService.OnRoomChangedAsync(room);
-
-            return match;
+        public async Task<Match> MatchAbandonnedAsync(Guid id)
+        {
+            var match = await GetMatchByIdAsync(id);
+            return await EndMatchAsync(match);
         }
 
         private async Task<Match> GetMatchByIdAsync(Guid id)
@@ -278,6 +277,34 @@ namespace PuppetMaster.WebApi.Services
             }
 
             return room;
+        }
+
+        private async Task<Match> EndMatchAsync(Match match)
+        {
+            if (match.RoomId == null)
+            {
+                return match;
+            }
+
+            var roomId = match.RoomId.Value;
+
+            match.Users!.Clear();
+            match.RoomId = null;
+            _applicationDbContext.Update(match);
+
+            var room = await GetRoomByIdAsync(roomId);
+            foreach (var roomUser in room.RoomUsers!)
+            {
+                roomUser.IsReady = false;
+                _applicationDbContext.Update(roomUser);
+            }
+
+            await _applicationDbContext.SaveChangesAsync();
+
+            await _hubService.OnMatchEndedAsync(roomId);
+            await _hubService.OnRoomChangedAsync(room);
+
+            return match;
         }
     }
 }

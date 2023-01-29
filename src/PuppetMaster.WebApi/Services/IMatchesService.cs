@@ -18,5 +18,7 @@ namespace PuppetMaster.WebApi.Services
         Task<Match> VoteMapAsync(Guid userId, Guid id, string voteMap);
 
         Task<Match> MatchEndedAsync(Guid userId, Guid id, MatchEndedRequest request);
+
+        Task<Match> MatchAbandonnedAsync(Guid id);
     }
 }
