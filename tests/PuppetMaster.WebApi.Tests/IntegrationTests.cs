@@ -1,17 +1,12 @@
-﻿using System.Text.RegularExpressions;
-using AutoMapper;
+﻿using AutoMapper;
 using Microsoft.AspNetCore.SignalR;
-using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
 using Moq;
 using PuppetMaster.WebApi.Hubs;
 using PuppetMaster.WebApi.Models;
 using PuppetMaster.WebApi.Models.Database;
-using PuppetMaster.WebApi.Models.Messages;
-using PuppetMaster.WebApi.Models.Responses;
 using PuppetMaster.WebApi.Profiles;
 using PuppetMaster.WebApi.Repositories;
 using PuppetMaster.WebApi.Services;
-using Xunit.Sdk;
 
 namespace PuppetMaster.WebApi.Tests
 {
