@@ -44,7 +44,7 @@ namespace PuppetMaster.WebApi.Tests
         }
 
         [Fact]
-        public async Task Test()
+        public async Task IntegrationTest()
         {
             // Create game and maps
             var game = await CreateGamesAsync();
@@ -104,15 +104,21 @@ namespace PuppetMaster.WebApi.Tests
             _delayedTasksServiceMock.Setup(s => s.SchedulePlayerPick(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<TimeSpan>()));
             _delayedTasksServiceMock.Setup(s => s.HasJoinedTimeout(It.IsAny<Guid>(), It.IsAny<Guid>(), It.IsAny<TimeSpan>()));
 
+            var joinCount = room.RoomUsers!.Count;
+
             // Join room
             foreach (var user in users.Where(u => u.Id != firstUser.Id))
             {
+                Assert.Equal(joinCount++, room.RoomUsers!.Count);
                 await _roomsService.JoinRoomAsync(user.Id, room.Id, null);
             }
+
+            var readyCount = room.RoomUsers!.Where(ru => ru.IsReady).Count();
 
             // Ready up
             foreach (var user in users)
             {
+                Assert.Equal(readyCount++, room.RoomUsers!.Where(ru => ru.IsReady).Count());
                 await Task.Delay(1000);
                 await _roomsService.ReadyRoomAsync(user.Id, room.Id, true);
             }
@@ -121,22 +127,17 @@ namespace PuppetMaster.WebApi.Tests
             var match = await _matchesService.CreateMatchAsync(room.Id);
 
             // Pick players
-            do
-            {
-                var pickedPlayers = match.MatchTeams!
+            var pickedPlayers = match.MatchTeams!
                 .SelectMany(mt => mt.MatchTeamUsers!
                 .Select(mtu => mtu.ApplicationUserId))
                 .ToList();
 
-                var availablePlayers = match.Users!
+            var availablePlayers = match.Users!
                     .ExceptBy(pickedPlayers, u => u!.Id)
                     .ToList();
 
-                if (!availablePlayers.Any())
-                {
-                    break;
-                }
-
+            do
+            {
                 var teamTurn = match.MatchTeams!
                     .OrderBy(mt => mt.MatchTeamUsers!.Count)
                     .ThenBy(mt => mt.TeamIndex)
@@ -146,16 +147,26 @@ namespace PuppetMaster.WebApi.Tests
                     .Single(mtu => mtu.IsCaptain)
                     .ApplicationUserId;
 
-                await _matchesService.PickPlayerAsync(captainToPickThisTurn, match.Id, availablePlayers.First().Id);
+                var pickedPlayer = availablePlayers.First();
+
+                await _matchesService.PickPlayerAsync(captainToPickThisTurn, match.Id, pickedPlayer.Id);
+                availablePlayers.Remove(pickedPlayer);
                 await Task.Delay(1000);
             }
-            while (true);
+            while (availablePlayers.Any());
 
+            Assert.Equal(match.Users!.Count, match.MatchTeams!.SelectMany(mt => mt.MatchTeamUsers!).Count());
+
+            // Vote Map
             foreach (var user in users)
             {
                 await _matchesService.VoteMapAsync(user.Id, match!.Id, game.Maps!.First().Name);
                 await Task.Delay(1000);
             }
+
+            Assert.Equal(
+                match.Users.Count, 
+                match.MatchTeams!.SelectMany(mt => mt.MatchTeamUsers!).Select(mtu => mtu.MapVote == game.Maps!.First().Name).Count());
 
             // Create Lobby
             await _matchesService.SetLobbyIdAsync(match.LobbyLeaderId!.Value, match.Id, "lobbyId");
