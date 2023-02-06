@@ -2,6 +2,8 @@
 
 # PuppetMaster WebApi Server
 
+Client repo is here : [PuppetMaster Client](https://github.com/frederikstonge/PuppetMaster-Client)
+
 ## Technologies
 - ASPNET Core WebApi
 - Swagger
