@@ -16,7 +16,7 @@ namespace PuppetMaster.WebApi
 {
     public static class Program
     {
-        private const string TokenUrl = "/api/authorization/token";
+        private const string TokenUrl = "api/authorization/token";
 
         public static Task Main(string[] args)
         {
@@ -103,10 +103,13 @@ namespace PuppetMaster.WebApi
                     {
                         Password = new OpenApiOAuthFlow()
                         {
-                            TokenUrl = new Uri(TokenUrl, UriKind.Relative),
+                            TokenUrl = new Uri($"/{TokenUrl}", UriKind.Relative),
                             Scopes =
                             {
                                 { Scopes.OfflineAccess, "Offline Access Scope" },
+                                { Scopes.Roles, "Roles Scope" },
+                                { Scopes.Email, "Email Scope" },
+                                { Scopes.Profile, "Profile Scope" },
                             }
                         },
                     }
@@ -142,12 +145,9 @@ namespace PuppetMaster.WebApi
             app.UseAuthentication();
             app.UseAuthorization();
 
-            app.UseEndpoints(options =>
-            {
-                options.MapControllers();
-                options.MapDefaultControllerRoute();
-                options.MapHub<RoomHub>("/hubs/room");
-            });
+            app.MapControllers();
+            app.MapDefaultControllerRoute();
+            app.MapHub<RoomHub>("/hubs/room");
 
             return app.RunAsync();
         }

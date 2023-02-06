@@ -21,6 +21,12 @@ namespace PuppetMaster.WebApi.Services
 
         public async Task<ClaimsPrincipal> PasswordGrantAsync(OpenIddictRequest request)
         {
+            if (string.IsNullOrEmpty(request.Username) ||
+                string.IsNullOrEmpty(request.Password))
+            {
+                throw new HttpResponseException(HttpStatusCode.BadRequest);
+            }
+
             var user = await _userManager.FindByNameAsync(request.Username);
             if (user == null)
             {
@@ -48,10 +54,7 @@ namespace PuppetMaster.WebApi.Services
                     Scopes.Roles
                 }.Intersect(request.GetScopes()));
 
-            foreach (var claim in principal.Claims)
-            {
-                claim.SetDestinations(GetDestinations(claim, principal));
-            }
+            principal.SetDestinations(GetDestinations);
 
             return principal;
         }
@@ -70,22 +73,20 @@ namespace PuppetMaster.WebApi.Services
             }
 
             var principal = await _signInManager.CreateUserPrincipalAsync(user);
-            foreach (var claim in principal.Claims)
-            {
-                claim.SetDestinations(GetDestinations(claim, principal));
-            }
+
+            principal.SetDestinations(GetDestinations);
 
             return principal;
         }
 
-        private static IEnumerable<string> GetDestinations(Claim claim, ClaimsPrincipal principal)
+        private static IEnumerable<string> GetDestinations(Claim claim)
         {
             switch (claim.Type)
             {
                 case Claims.Name:
                     yield return Destinations.AccessToken;
 
-                    if (principal.HasScope(Scopes.Profile))
+                    if (claim.Subject!.HasScope(Scopes.Profile))
                     {
                         yield return Destinations.IdentityToken;
                     }
@@ -95,7 +96,7 @@ namespace PuppetMaster.WebApi.Services
                 case Claims.Email:
                     yield return Destinations.AccessToken;
 
-                    if (principal.HasScope(Scopes.Email))
+                    if (claim.Subject!.HasScope(Scopes.Email))
                     {
                         yield return Destinations.IdentityToken;
                     }
@@ -105,7 +106,7 @@ namespace PuppetMaster.WebApi.Services
                 case Claims.Role:
                     yield return Destinations.AccessToken;
 
-                    if (principal.HasScope(Scopes.Roles))
+                    if (claim.Subject!.HasScope(Scopes.Roles))
                     {
                         yield return Destinations.IdentityToken;
                     }

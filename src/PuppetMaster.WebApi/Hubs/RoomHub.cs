@@ -64,7 +64,7 @@ namespace PuppetMaster.WebApi.Hubs
             var user = await _accountService.GetUserAsync(Context.User!);
             var roomId = user!.RoomUser!.RoomId;
             var groupId = roomId!.ToString();
-            message.From = user!.UserName;
+            message.From = user!.UserName!;
             await SendChatMessage(groupId, message);
         }
 
