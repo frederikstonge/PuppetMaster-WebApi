@@ -89,6 +89,7 @@ namespace PuppetMaster.WebApi.Services
             }
 
             // Notify match has changed
+            await _hubService.OnRoomChangedAsync(room);
             await _hubService.OnMatchChangedAsync(match);
             return match;
         }

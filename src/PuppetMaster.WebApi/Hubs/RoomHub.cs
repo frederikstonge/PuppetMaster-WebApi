@@ -47,7 +47,11 @@ namespace PuppetMaster.WebApi.Hubs
 
             try
             {
-                await _roomsService.LeaveRoomAsync(user.Id, roomId);
+                var room = await _roomsService.GetRoomAsync(roomId);
+                if (room.Match == null)
+                {
+                    await _roomsService.LeaveRoomAsync(user.Id, roomId);
+                }
             }
             catch
             {
