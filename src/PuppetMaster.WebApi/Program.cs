@@ -83,6 +83,12 @@ namespace PuppetMaster.WebApi
                         options.AddDevelopmentEncryptionCertificate();
                         options.AddDevelopmentSigningCertificate();
                     }
+                    else
+                    {
+                        var thumbprints = builder.Configuration["WEBSITE_LOAD_CERTIFICATES"]!.Split(",").ToList();
+                        options.AddEncryptionCertificate(thumbprints[0]);
+                        options.AddSigningCertificate(thumbprints[1]);
+                    }
 
                     options.UseAspNetCore()
                            .EnableTokenEndpointPassthrough();

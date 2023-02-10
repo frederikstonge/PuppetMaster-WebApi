@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		LICENSE.md = LICENSE.md
+		.github\workflows\main_puppetmaster.yml = .github\workflows\main_puppetmaster.yml
 		README.md = README.md
 		stylecop.ruleset = stylecop.ruleset
 	EndProjectSection
@@ -15,7 +16,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PuppetMaster.WebApi", "src\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PuppetMaster.WebApi.Certificates", "src\Puppetmaster.WebApi.Certificates\PuppetMaster.WebApi.Certificates.csproj", "{4BD095AB-6C04-42D1-871F-5644A3408BDE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PuppetMaster.WebApi.Tests", "tests\PuppetMaster.WebApi.Tests\PuppetMaster.WebApi.Tests.csproj", "{29843516-EF75-4BDA-A6F7-4ED36AA6B976}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PuppetMaster.WebApi.Tests", "tests\PuppetMaster.WebApi.Tests\PuppetMaster.WebApi.Tests.csproj", "{29843516-EF75-4BDA-A6F7-4ED36AA6B976}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
