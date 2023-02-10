@@ -78,18 +78,9 @@ namespace PuppetMaster.WebApi
 
                     options.AcceptAnonymousClients();
 
-                    if (builder.Environment.IsDevelopment())
-                    {
-                        options.AddDevelopmentEncryptionCertificate();
-                        options.AddDevelopmentSigningCertificate();
-                    }
-                    else
-                    {
-                        var thumbprints = builder.Configuration["WEBSITE_LOAD_CERTIFICATES"]!.Split(",").ToList();
-                        options.AddEncryptionCertificate(thumbprints[0]);
-                        options.AddSigningCertificate(thumbprints[1]);
-                    }
-
+                    options.AddDevelopmentEncryptionCertificate();
+                    options.AddDevelopmentSigningCertificate();
+                    
                     options.UseAspNetCore()
                            .EnableTokenEndpointPassthrough();
                 })
