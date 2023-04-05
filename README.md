@@ -15,7 +15,7 @@ Client repo is here : [PuppetMaster Client](https://github.com/frederikstonge/Pu
 
 ## Prerequisite
 - Visual Studio
-- .NET 6 SDK
+- .NET 7 SDK
 - Microsoft SQL Server database
 
 ## Before you run
